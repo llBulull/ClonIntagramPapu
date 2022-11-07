@@ -1,6 +1,7 @@
 package com.example.cloninstagram
 
 import android.app.Activity
+import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,6 +10,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,10 +21,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cloninstagram.ui.theme.ClonInstagramTheme
+import java.util.regex.Pattern
 
 @Composable
 fun LoginScreen(){
@@ -43,21 +49,31 @@ fun Body(modifier: Modifier){
     var password by remember {
         mutableStateOf("")
     }
+
+    var isLoginEnable by remember {
+        mutableStateOf(false)
+    }
+
     Column(modifier = modifier) {
         ImageLogo(Modifier.align(Alignment.CenterHorizontally))
         Spacer(modifier = Modifier.height(16.dp))
-        Email(email){email=it}
+        Email(email = email, onTextChange = {
+            email=it
+            isLoginEnable = enableLogin(email, password)
+
+                                            }, /*modifier = modifier.fillMaxWidth()*/)
         Spacer(modifier = Modifier.height(8.dp))
-        Password(password){password=it}
+       Password(password = password, onTextChange = {
+           password=it
+           isLoginEnable = enableLogin(email, password)
+       } )
         Spacer(modifier = Modifier.height(8.dp))
         ForgotPassword(Modifier.align(Alignment.End))
         Spacer(modifier = Modifier.height(25.dp))
-        LoginButton(true)
-
+        LoginButton(modifier = Modifier.fillMaxWidth(), isLoginEnable)
         LoginDiver()
-
+        Spacer(modifier = Modifier.height(16.dp))
         SocialLogin()
-
         Footer(Modifier.align(Alignment.CenterHorizontally))
     }
     
@@ -130,14 +146,25 @@ fun SingUp(modifier: Modifier) {
 
 
 @Composable
-fun LoginButton(loginEnabled:Boolean) {
-    Button(onClick = { /*TODO*/ },
-        modifier = Modifier.fillMaxWidth(),
-        enabled = loginEnabled) {
+fun LoginButton(modifier: Modifier, isLoginEnable:Boolean) {
+    Button(onClick = { /*TODO*/ }, modifier = modifier, enabled = isLoginEnable,
+        colors = ButtonDefaults.buttonColors(
+            backgroundColor = Color(0xFF4EA8E9),
+            disabledBackgroundColor = Color(0xFF78C8F9),
+            contentColor = Color.White,
+            disabledContentColor = Color.White
+        )){
 
         Text(text = "Login")
     }
+    
 }
+
+fun enableLogin(email: String, password: String):Boolean{
+    return Patterns.EMAIL_ADDRESS.matcher(email).matches() &&
+    password.length>7        
+}
+
 
 @Composable
 fun ForgotPassword(modifier: Modifier){
@@ -150,22 +177,33 @@ fun ForgotPassword(modifier: Modifier){
 
 @Composable
 fun Password(password: String, onTextChange:(String)->Unit){
+    var passwordVisibility by remember {
+        mutableStateOf(false)
+    }
     TextField(value = password, onValueChange = {onTextChange(it)}, modifier = Modifier.fillMaxWidth(),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
         colors = TextFieldDefaults.textFieldColors(
             textColor = Color(0xFFB2B2B2),
             backgroundColor = Color(0xFFFAFAFA),
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent
         ),
+        
         trailingIcon = {
-            val image = if (){
-                Icon(painter = painterResource(id = R.drawable.ic_visibility_off), contentDescription = "Hide password" )
-            }else{
-                Icon(painter = painterResource(id = R.drawable.ic_remove_red_eye), contentDescription = "Hide password" )
+            val image = if (passwordVisibility) {
+                Icons.Filled.Visibility
+            } else {
+                Icons.Filled.VisibilityOff
             }
-        },
-
+            IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
+                Icon(imageVector = image, contentDescription = "Icon")
+            }
+        }, 
+        visualTransformation = if(passwordVisibility){
+            VisualTransformation.None
+        } else{
+            PasswordVisualTransformation()
+        }
         )
 }
 
